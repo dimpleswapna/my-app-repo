@@ -3,14 +3,17 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = 'swapnahd/my-app:latest'
-        DOCKER_USERNAME = 'swapnahd'
     }
 
     stages {
         stage('Docker Hub Login') {
             steps {
                 script {
-                    withCredentials([usernamePassword(credentialsId: 'docker-hub-credentials', variable: 'DOCKER_PASSWORD')]) {
+                    withCredentials([usernamePassword(
+                        credentialsId: 'docker-hub-credentials',
+                        usernameVariable: 'DOCKER_USERNAME',
+                        passwordVariable: 'DOCKER_PASSWORD'
+                    )]) {
                         sh '''
                             echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
                         '''
