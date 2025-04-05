@@ -3,14 +3,17 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = 'swapnahd/my-app:latest'
+        DOCKER_USERNAME = 'swapnahd'
     }
 
     stages {
-        stage('Login to Docker Hub') {
+        stage('Docker Hub Login') {
             steps {
                 script {
                     withCredentials([string(credentialsId: 'docker-hub-credentials', variable: 'DOCKER_PASSWORD')]) {
-                        sh 'echo $DOCKER_PASSWORD | docker login -u swapnahd --password-stdin'
+                        sh '''
+                            echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+                        '''
                     }
                 }
             }
@@ -31,10 +34,10 @@ pipeline {
 
     post {
         success {
-            echo 'Docker Image Pushed Successfully! 🎉'
+            echo '✅ Docker Image Pushed Successfully!'
         }
         failure {
-            echo 'Docker Image Push Failed ❌'
+            echo '❌ Docker Image Push Failed!'
         }
     }
 }
