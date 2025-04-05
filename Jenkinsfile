@@ -10,7 +10,7 @@ pipeline {
         stage('Login to Docker Hub') {
             steps {
                 script {
-                    // Login to Docker Hub using the credentials stored in Jenkins
+                    // Docker login to Docker Hub using the credentials from Jenkins
                     sh 'echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin'
                 }
             }
