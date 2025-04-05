@@ -1,11 +1,12 @@
-const express = require('express');
-const app = express();
-
-app.get('/', (req, res) => {
-    res.send('Hello, World! This is my containerized application.');
-});
-
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
-});
+{
+  "name": "my-app",
+  "version": "1.0.0",
+  "description": "My containerized app",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}
