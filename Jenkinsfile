@@ -2,45 +2,57 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = 'swapnahd/my-app:latest'
+        IMAGE_NAME = "my-app:latest"
+        CONTAINER_NAME = "my-app-container"
+        DOCKER_HUB_USER = "swapnahd" // Change this!
     }
 
     stages {
-        stage('Docker Hub Login') {
+        stage('Checkout Code') {
             steps {
-                script {
-                    withCredentials([usernamePassword(
-                        credentialsId: 'docker-hub-credentials',
-                        usernameVariable: 'DOCKER_USERNAME',
-                        passwordVariable: 'DOCKER_PASSWORD'
-                    )]) {
-                        sh '''
-                            echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-                        '''
-                    }
-                }
+                git 'https://github.com/my-app-repo/my-app.git' // Change this!
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t $DOCKER_IMAGE .'
+                sh 'docker build -t $IMAGE_NAME .'
             }
         }
 
-        stage('Push Docker Image') {
+        stage('Stop & Remove Existing Container') {
             steps {
-                sh 'docker push $DOCKER_IMAGE'
+                sh '''
+                docker stop $CONTAINER_NAME || true
+                docker rm $CONTAINER_NAME || true
+                '''
+            }
+        }
+
+        stage('Run New Container') {
+            steps {
+                sh 'docker run -d -p 3000:3000 --name $CONTAINER_NAME $IMAGE_NAME'
+            }
+        }
+
+        stage('Push to Docker Hub') {
+            steps {
+                withDockerRegistry([credentialsId: 'docker-hub-credentials', url: '']) {
+                    sh '''
+                    docker tag $IMAGE_NAME $DOCKER_HUB_USER/$IMAGE_NAME
+                    docker push $DOCKER_HUB_USER/$IMAGE_NAME
+                    '''
+                }
             }
         }
     }
 
     post {
         success {
-            echo '✅ Docker Image Pushed Successfully!'
+            echo 'Deployment Successful! 🎉'
         }
         failure {
-            echo '❌ Docker Image Push Failed!'
+            echo 'Deployment Failed ❌'
         }
     }
 }
