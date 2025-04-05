@@ -2,36 +2,39 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_USERNAME = 'swapnahd'  // Your Docker Hub username
-        DOCKER_PASSWORD = credentials('docker-hub-credentials')  // Jenkins Credentials ID for your Docker Hub Token
+        DOCKER_IMAGE = 'swapnahd/my-app:latest'
     }
 
     stages {
         stage('Login to Docker Hub') {
             steps {
                 script {
-                    // Docker login to Docker Hub using the credentials from Jenkins
-                    sh 'echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin'
+                    withCredentials([string(credentialsId: 'docker-hub-credentials', variable: 'DOCKER_PASSWORD')]) {
+                        sh 'echo $DOCKER_PASSWORD | docker login -u swapnahd --password-stdin'
+                    }
                 }
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                script {
-                    // Build the Docker image
-                    sh 'docker build -t swpanahd/my-app:latest .'
-                }
+                sh 'docker build -t $DOCKER_IMAGE .'
             }
         }
 
         stage('Push Docker Image') {
             steps {
-                script {
-                    // Push the Docker image to Docker Hub
-                    sh 'docker push swpanahd/my-app:latest'
-                }
+                sh 'docker push $DOCKER_IMAGE'
             }
+        }
+    }
+
+    post {
+        success {
+            echo 'Docker Image Pushed Successfully! 🎉'
+        }
+        failure {
+            echo 'Docker Image Push Failed ❌'
         }
     }
 }
