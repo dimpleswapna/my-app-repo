@@ -2,77 +2,43 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = "my-app:latest"
-        CONTAINER_NAME = "my-app-container"
-        DOCKER_HUB_USER = "swapnahd"
+        // Docker Hub Credentials
+        DOCKER_USERNAME = 'swapnahd'  // your Docker Hub username
+        DOCKER_PASSWORD = credentials('docker-hub-credentials')  // Jenkins Credentials ID for your Docker Hub Personal Access Token (PAT)
     }
 
     stages {
-        stage('Checkout Code') {
+        stage('Login to Docker Hub') {
             steps {
-                // This will check out the repository into a folder named "my-app-repo" by default.
-                git branch: 'master', url: 'https://github.com/dimpleswapna/my-app-repo.git'
+                script {
+                    // Login to Docker Hub
+                    sh 'echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin'
+                }
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                // Change directory to the checked out repo where package.json is located.
-                dir('my-app-repo') {
-                    sh '''
-                        echo "=== [DEBUG] Current Directory ==="
-                        pwd
-                        echo "=== [DEBUG] Files in current directory ==="
-                        ls -l
-                        echo "=== [DEBUG] Checking for required files ==="
-                        [ -f Dockerfile ] && echo "✅ Dockerfile found" || echo "❌ Dockerfile missing"
-                        [ -f package.json ] && echo "✅ package.json found" || echo "❌ package.json missing"
-                        echo "=== [DEBUG] Building Docker Image ==="
-                        docker build -t $IMAGE_NAME .
-                    '''
+                script {
+                    // Build Docker image
+                    sh 'docker build -t swpanahd/my-app:latest .'
                 }
-            }
-        }
-
-        stage('Stop & Remove Existing Container') {
-            steps {
-                sh '''
-                    echo "Stopping existing container if any..."
-                    docker stop $CONTAINER_NAME || true
-                    docker rm $CONTAINER_NAME || true
-                '''
-            }
-        }
-
-        stage('Run New Container') {
-            steps {
-                sh '''
-                    echo "Running new container..."
-                    docker run -d -p 3000:3000 --name $CONTAINER_NAME $IMAGE_NAME
-                '''
             }
         }
 
         stage('Push to Docker Hub') {
             steps {
-                withDockerRegistry([credentialsId: 'docker-hub-credentials', url: '']) {
-                    sh '''
-                        echo "Tagging image for Docker Hub..."
-                        docker tag $IMAGE_NAME $DOCKER_HUB_USER/$IMAGE_NAME
-                        echo "Pushing image to Docker Hub..."
-                        docker push $DOCKER_HUB_USER/$IMAGE_NAME
-                    '''
+                script {
+                    // Push Docker image to Docker Hub
+                    sh 'docker push swpanahd/my-app:latest'
                 }
             }
         }
-    }
 
-    post {
-        success {
-            echo '✅ Deployment Successful!'
-        }
-        failure {
-            echo '❌ Deployment Failed'
+        stage('Post Actions') {
+            steps {
+                echo 'Deployment successful!'
+            }
         }
     }
 }
