@@ -4,38 +4,33 @@ pipeline {
     environment {
         IMAGE_NAME = "my-app:latest"
         CONTAINER_NAME = "my-app-container"
-        DOCKER_HUB_USER = "swapnahd" // Replace with your Docker Hub username
+        DOCKER_HUB_USER = "swapnahd"
     }
 
     stages {
         stage('Checkout Code') {
             steps {
-                git 'https://github.com/dimpleswapna/my-app-repo.git'
-            }
-        }
-
-        stage('Debug Info') {
-            steps {
-                sh '''
-                    echo "Debugging Jenkins Environment:"
-                    id
-                    whoami
-                    docker version
-                '''
+                // Make sure you're on the correct branch (master)
+                git branch: 'master', url: 'https://github.com/dimpleswapna/my-app-repo.git'
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t $IMAGE_NAME .'
+                // Ensure Docker context has the Dockerfile & package.json
+                sh '''
+                    echo "Current dir: $(pwd)"
+                    ls -l
+                    docker build -t $IMAGE_NAME .
+                '''
             }
         }
 
         stage('Stop & Remove Existing Container') {
             steps {
                 sh '''
-                    docker stop $CONTAINER_NAME || true
-                    docker rm $CONTAINER_NAME || true
+                docker stop $CONTAINER_NAME || true
+                docker rm $CONTAINER_NAME || true
                 '''
             }
         }
@@ -50,8 +45,8 @@ pipeline {
             steps {
                 withDockerRegistry([credentialsId: 'docker-hub-credentials', url: '']) {
                     sh '''
-                        docker tag $IMAGE_NAME $DOCKER_HUB_USER/$IMAGE_NAME
-                        docker push $DOCKER_HUB_USER/$IMAGE_NAME
+                    docker tag $IMAGE_NAME $DOCKER_HUB_USER/$IMAGE_NAME
+                    docker push $DOCKER_HUB_USER/$IMAGE_NAME
                     '''
                 }
             }
