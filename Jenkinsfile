@@ -16,11 +16,19 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh '''
-                    echo "Current directory: $(pwd)"
-                    ls -l
-                    docker build -t $IMAGE_NAME .
-                '''
+                dir('my-app-repo') {
+                    sh '''
+                        echo "=== [DEBUG] Current directory ==="
+                        pwd
+                        echo "=== [DEBUG] Listing files ==="
+                        ls -l
+                        echo "=== [DEBUG] Checking for Dockerfile and package.json ==="
+                        test -f Dockerfile && echo "✅ Dockerfile exists" || echo "❌ Dockerfile missing"
+                        test -f package.json && echo "✅ package.json exists" || echo "❌ package.json missing"
+
+                        docker build -t $IMAGE_NAME .
+                    '''
+                }
             }
         }
 
@@ -53,10 +61,10 @@ pipeline {
 
     post {
         success {
-            echo 'Deployment Successful! 🎉'
+            echo '✅ Deployment Successful! 🎉'
         }
         failure {
-            echo 'Deployment Failed ❌'
+            echo '❌ Deployment Failed'
         }
     }
 }
