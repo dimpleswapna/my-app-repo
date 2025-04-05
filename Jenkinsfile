@@ -4,19 +4,25 @@ pipeline {
     environment {
         IMAGE_NAME = "my-app:latest"
         CONTAINER_NAME = "my-app-container"
-        DOCKER_HUB_USER = "swapnahd" // Change this!
+        DOCKER_HUB_USER = "swapnahd"
     }
 
     stages {
         stage('Checkout Code') {
             steps {
-                git 'https://github.com/dimpleswapna/my-app-repo.git' // Change this!
+                git branch: 'master', url: 'https://github.com/dimpleswapna/my-app-repo.git'
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t $IMAGE_NAME .'
+                dir('my-app-repo') {
+                    sh '''
+                        echo "Inside build directory: $(pwd)"
+                        ls -l
+                        docker build -t $IMAGE_NAME .
+                    '''
+                }
             }
         }
 
