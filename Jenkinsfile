@@ -4,7 +4,7 @@ pipeline {
     environment {
         // Docker Hub Credentials
         DOCKER_USERNAME = 'swapnahd'  // your Docker Hub username
-        DOCKER_PASSWORD = credentials('dckr_pat_40h3CCBI9j-A0tfZquw6EXeLqo0')  // Jenkins Credentials ID for your Docker Hub Personal Access Token (PAT)
+        DOCKER_PASSWORD = credentials('docker-hub-credentials')  // Jenkins Credentials ID for your Docker Hub Personal Access Token (PAT)
     }
 
     stages {
