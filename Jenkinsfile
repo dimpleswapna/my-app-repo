@@ -10,7 +10,8 @@ pipeline {
     stages {
         stage('Checkout Code') {
             steps {
-                git 'https://github.com/my-app-repo/my-app.git' // Change this!
+                git 't' // Change this!git 'https://github.com/my-app-repo/my-app.git'
+
             }
         }
 
@@ -37,7 +38,7 @@ pipeline {
 
         stage('Push to Docker Hub') {
             steps {
-                withDockerRegistry([credentialsId: 'docker-hub-credentials', url: 'https://github.com/my-app-repo/my-app.git']) {
+                withDockerRegistry([credentialsId: 'docker-hub-credentials', url: 'git 'https://github.com/my-app-repo/my-app.git']) {
                     sh '''
                     docker tag $IMAGE_NAME $DOCKER_HUB_USER/$IMAGE_NAME
                     docker push $DOCKER_HUB_USER/$IMAGE_NAME
