@@ -10,20 +10,17 @@ pipeline {
     stages {
         stage('Checkout Code') {
             steps {
-                // Make sure you're on the correct branch (master)
                 git branch: 'master', url: 'https://github.com/dimpleswapna/my-app-repo.git'
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                dir('app') { // ✅ Change 'app' to the actual subdirectory name
-                    sh '''
-                        echo "Building Docker image from: $(pwd)"
-                        ls -l
-                        docker build -t $IMAGE_NAME .
-                    '''
-                }
+                sh '''
+                    echo "Current directory: $(pwd)"
+                    ls -l
+                    docker build -t $IMAGE_NAME .
+                '''
             }
         }
 
