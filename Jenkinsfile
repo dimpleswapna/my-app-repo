@@ -4,13 +4,13 @@ pipeline {
     environment {
         IMAGE_NAME = "my-app:latest"
         CONTAINER_NAME = "my-app-container"
-        DOCKER_HUB_USER = "swapnahd"
+        DOCKER_HUB_USER = "swapnahd" // Your Docker Hub username
     }
 
     stages {
         stage('Checkout Code') {
             steps {
-                git 'https://github.com/dimpleswapna/my-app-repo.git'
+                git branch: 'main', url: 'https://github.com/dimpleswapna/my-app-repo.git'
             }
         }
 
@@ -20,31 +20,7 @@ pipeline {
             }
         }
 
-        stage('Stop & Remove Existing Container') {
-            steps {
-                sh '''
-                    docker stop $CONTAINER_NAME || true
-                    docker rm $CONTAINER_NAME || true
-                '''
-            }
-        }
-
-        stage('Run New Container') {
-            steps {
-                sh 'docker run -d -p 3000:3000 --name $CONTAINER_NAME $IMAGE_NAME'
-            }
-        }
-
-        stage('Push to Docker Hub') {
-            steps {
-                withDockerRegistry([credentialsId: 'docker-hub-credentials', url: '']) {
-                    sh '''
-                        docker tag $IMAGE_NAME $DOCKER_HUB_USER/$IMAGE_NAME
-                        docker push $DOCKER_HUB_USER/$IMAGE_NAME
-                    '''
-                }
-            }
-        }
+        // ... rest of your pipeline
     }
 
     post {
