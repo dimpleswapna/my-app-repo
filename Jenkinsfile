@@ -17,20 +17,21 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                // Ensure Docker context has the Dockerfile & package.json
-                sh '''
-                    echo "Current dir: $(pwd)"
-                    ls -l
-                    docker build -t $IMAGE_NAME .
-                '''
+                dir('app') { // ✅ Change 'app' to the actual subdirectory name
+                    sh '''
+                        echo "Building Docker image from: $(pwd)"
+                        ls -l
+                        docker build -t $IMAGE_NAME .
+                    '''
+                }
             }
         }
 
         stage('Stop & Remove Existing Container') {
             steps {
                 sh '''
-                docker stop $CONTAINER_NAME || true
-                docker rm $CONTAINER_NAME || true
+                    docker stop $CONTAINER_NAME || true
+                    docker rm $CONTAINER_NAME || true
                 '''
             }
         }
@@ -45,8 +46,8 @@ pipeline {
             steps {
                 withDockerRegistry([credentialsId: 'docker-hub-credentials', url: '']) {
                     sh '''
-                    docker tag $IMAGE_NAME $DOCKER_HUB_USER/$IMAGE_NAME
-                    docker push $DOCKER_HUB_USER/$IMAGE_NAME
+                        docker tag $IMAGE_NAME $DOCKER_HUB_USER/$IMAGE_NAME
+                        docker push $DOCKER_HUB_USER/$IMAGE_NAME
                     '''
                 }
             }
