@@ -2,51 +2,39 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = "my-app:latest"
-        CONTAINER_NAME = "my-app-container"
-        DOCKER_HUB_USER = "swapnahd"
+        IMAGE_NAME = "my-app"
+        IMAGE_TAG = "latest"
+        CONTAINER_PORT = "3000"
     }
 
     stages {
-        stage('Checkout Code') {
+        stage('Checkout') {
             steps {
-                git branch: 'master', url: 'https://github.com/dimpleswapna/my-app-repo.git'
+                checkout scm
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                sh 'npm install'
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                dir('my-app-repo') {
-                    sh '''
-                        echo "Inside build directory: $(pwd)"
-                        ls -l
-                        docker build -t $IMAGE_NAME .
-                    '''
+                script {
+                    docker.build("${IMAGE_NAME}:${IMAGE_TAG}")
                 }
             }
         }
 
-        stage('Stop & Remove Existing Container') {
+        stage('Run Docker Container') {
             steps {
-                sh '''
-                docker stop $CONTAINER_NAME || true
-                docker rm $CONTAINER_NAME || true
-                '''
-            }
-        }
-
-        stage('Run New Container') {
-            steps {
-                sh 'docker run -d -p 3000:3000 --name $CONTAINER_NAME $IMAGE_NAME'
-            }
-        }
-
-        stage('Push to Docker Hub') {
-            steps {
-                withDockerRegistry([credentialsId: 'docker-hub-credentials', url: '']) {
+                script {
+                    // Stop and remove any existing container
                     sh '''
-                    docker tag $IMAGE_NAME $DOCKER_HUB_USER/$IMAGE_NAME
-                    docker push $DOCKER_HUB_USER/$IMAGE_NAME
+                    docker rm -f ${IMAGE_NAME} || true
+                    docker run -d --name ${IMAGE_NAME} -p 3000:${CONTAINER_PORT} ${IMAGE_NAME}:${IMAGE_TAG}
                     '''
                 }
             }
@@ -55,10 +43,10 @@ pipeline {
 
     post {
         success {
-            echo 'Deployment Successful! 🎉'
+            echo 'Application deployed successfully.'
         }
         failure {
-            echo 'Deployment Failed ❌'
+            echo 'Pipeline failed.'
         }
     }
 }
