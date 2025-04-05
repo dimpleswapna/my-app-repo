@@ -10,7 +10,7 @@ pipeline {
     stages {
         stage('Checkout Code') {
             steps {
-                git 'https://github.com/dimpleswapna/my-app-repo/my-app.git' // Change this!
+                git 'https://github.com/dimpleswapna/my-app-repo.git' // Change this!
             }
         }
 
