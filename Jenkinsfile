@@ -10,31 +10,33 @@ pipeline {
     stages {
         stage('Checkout Code') {
             steps {
+                // Clone the repo from GitHub
                 git branch: 'master', url: 'https://github.com/dimpleswapna/my-app-repo.git'
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                dir('my-app-repo') {
-                    sh '''
-                        echo "=== [DEBUG] Current directory ==="
-                        pwd
-                        echo "=== [DEBUG] Listing files ==="
-                        ls -l
-                        echo "=== [DEBUG] Checking for Dockerfile and package.json ==="
-                        test -f Dockerfile && echo "✅ Dockerfile exists" || echo "❌ Dockerfile missing"
-                        test -f package.json && echo "✅ package.json exists" || echo "❌ package.json missing"
+                sh '''
+                    echo "=== [DEBUG] Current Directory ==="
+                    pwd
+                    echo "=== [DEBUG] Files in workspace ==="
+                    ls -l
 
-                        docker build -t $IMAGE_NAME .
-                    '''
-                }
+                    echo "=== [DEBUG] Checking required files ==="
+                    [ -f Dockerfile ] && echo "✅ Dockerfile found" || echo "❌ Dockerfile missing"
+                    [ -f package.json ] && echo "✅ package.json found" || echo "❌ package.json missing"
+
+                    echo "=== [DEBUG] Building Docker Image ==="
+                    docker build -t $IMAGE_NAME .
+                '''
             }
         }
 
         stage('Stop & Remove Existing Container') {
             steps {
                 sh '''
+                    echo "Stopping old container if exists..."
                     docker stop $CONTAINER_NAME || true
                     docker rm $CONTAINER_NAME || true
                 '''
@@ -43,7 +45,10 @@ pipeline {
 
         stage('Run New Container') {
             steps {
-                sh 'docker run -d -p 3000:3000 --name $CONTAINER_NAME $IMAGE_NAME'
+                sh '''
+                    echo "Running new container..."
+                    docker run -d -p 3000:3000 --name $CONTAINER_NAME $IMAGE_NAME
+                '''
             }
         }
 
@@ -51,7 +56,10 @@ pipeline {
             steps {
                 withDockerRegistry([credentialsId: 'docker-hub-credentials', url: '']) {
                     sh '''
+                        echo "Tagging image for Docker Hub..."
                         docker tag $IMAGE_NAME $DOCKER_HUB_USER/$IMAGE_NAME
+
+                        echo "Pushing image to Docker Hub..."
                         docker push $DOCKER_HUB_USER/$IMAGE_NAME
                     '''
                 }
@@ -61,7 +69,7 @@ pipeline {
 
     post {
         success {
-            echo '✅ Deployment Successful! 🎉'
+            echo '✅ Deployment Successful!'
         }
         failure {
             echo '❌ Deployment Failed'
